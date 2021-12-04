@@ -37,7 +37,7 @@ namespace CoffeePicker.Server.Controllers
         //backend logic
         [HttpPost]
         public ActionResult Create(Coffee coffee)
-        {
+        { 
             applicationDbContext.Coffee.Add(coffee);
             applicationDbContext.SaveChanges();
 
@@ -45,7 +45,7 @@ namespace CoffeePicker.Server.Controllers
             //Coffees.Add(coffee); //add coffee to the list
 
             //var newCoffee = Coffees.Find(o => o.Id == coffee.Id); //find me a coffee with id that's matching above
-            return Ok();
+            return Ok(coffee);
         }
 
         // Read
@@ -78,7 +78,8 @@ namespace CoffeePicker.Server.Controllers
                 //updated by properties 
                 oldcoffee.Title = newCoffee.Title;
                 oldcoffee.Description = newCoffee.Description;
-                return Ok(newCoffee);
+                applicationDbContext.SaveChanges();
+                return Ok(oldcoffee);
             }
             return NotFound("Coffee not found.");
 
@@ -93,6 +94,7 @@ namespace CoffeePicker.Server.Controllers
             if (coffee is not null)
             {
                 applicationDbContext.Coffee.Remove(coffee);
+                applicationDbContext.SaveChanges();
                 return Ok();
             }
             return NotFound("Coffee not found.");

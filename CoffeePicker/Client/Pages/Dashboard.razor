@@ -15,23 +15,28 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-12 col-sm-12 col-md-4 col-lg-4 col-xl-4">
+    <div class="col-md-8 col-lg-8 col-xl-8">
 
         @if (CoffeeSpecial != null)
         {
-            <div class="card-group">
-                @foreach (Coffee coffee in CoffeeSpecial)
-                {
+            <div class="">
+                <div class="row">
+                    @foreach (Coffee coffee in CoffeeSpecial)
+                    {
 
-                    <div class="card" style="width: 18rem;margin :5px">
-                        <div class="card-body">
-                            <h5 class="card-title">@coffee.Title</h5>
-                            <p class="card-text">@coffee.Description</p>
-                            <p class="card-text"><small class="text-muted">@coffee.DateCreated.ToString("yyyy-mm-dd")</small></p>
-                            <button class="btn btn-primary" @onclick="() => GetDetails(coffee.Id)">Edit</button>
+                        <div class="col-md-6 col-lg-6 col-xl-6">
+                            <div class="card" style="margin :5px">
+                                <div class="card-body">
+                                    <h5 class="card-title">@coffee.Title</h5>
+                                    <p class="card-text">@coffee.Description</p>
+                                    <p class="card-text"><small class="text-muted">@coffee.DateCreated.ToString("yyyy-mm-dd")</small></p>
+                                    <button class="btn btn-primary" @onclick="(e) => GetDetails(coffee.Id)">Edit</button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                }
+
+                    }
+                </div>
             </div>
         }
         else
@@ -39,43 +44,42 @@
             <h4>Loading !! </h4>
         }
     </div>
-</div>
-<div class="col-12 col-sm-12 col-md-4 col-lg-4 col-xl-4">
-    @if (SelectedCoffee is not null)
-    {
-        <EditForm class="container" Model="SelectedCoffee" OnValidSubmit="HandleValidSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+    <div class="col-md-4 col-lg-4 col-xl-4">
+        @if (SelectedCoffee is not null)
+        {
+            <EditForm class="container" Model="SelectedCoffee">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-            <div class="form-group">
-                <label for="title">Title</label>
-                <InputTextArea id="title" @bind-Value="SelectedCoffee.Title" placeholder="Coffee title..." class="form-control" />
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description</label>
-                <InputTextArea id="description" @bind-Value="SelectedCoffee.Description" placeholder="Description..." class="form-control" rows="7" />
-            </div>
-
-            <div class="row">
-                <div class="col">
-                    <button type="submit" class="btn btn-success" @onclick="DeleteCoffee"> @(SelectedCoffee.Id == 0 ? "Create" : "Update")</button>
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <InputTextArea id="title" @bind-Value="SelectedCoffee.Title" placeholder="Coffee title..." class="form-control" />
                 </div>
-                @if (SelectedCoffee.Id != 0)
-                {
-                    <div class="col">
-                        <button type="button" @onclick="() => HandleValidSubmit()" class="btn btn-danger float-right">Delete</button>
-                    </div>
-                }
-            </div>
-        </EditForm>
-    }
-    else
-    {
-        <p>No coffee selected</p>
-    }
-</div>
 
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <InputTextArea id="description" @bind-Value="SelectedCoffee.Description" placeholder="Description..." class="form-control" rows="7" />
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <button type="submit" class="btn btn-success" @onclick="() => HandleValidSubmit()"> @(SelectedCoffee.Id == 0 ? "Create" : "Update")</button>
+                    </div>
+                    @if (SelectedCoffee.Id != 0)
+                    {
+                        <div class="col">
+                            <button type="button" @onclick="() => DeleteCoffee()" class="btn btn-danger float-right">Delete</button>
+                        </div>
+                    }
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <p>No coffee selected</p>
+        }
+    </div>
+</div>
 @code {
 
     private Coffee[] CoffeeSpecial;
@@ -89,8 +93,14 @@
 
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        CoffeeSpecial = await HttpClient.GetFromJsonAsync<Coffee[]>("api/coffee");
+    }
+
     async Task GetDetails(int id)
     {
+        IsCreating = false;
         SelectedCoffee = new();
         SelectedCoffee = await HttpClient.GetFromJsonAsync<Coffee>($"api/Coffee/{id}");
     }
@@ -113,15 +123,16 @@
             response = await HttpClient.PutAsJsonAsync<Coffee>("api/Coffee", SelectedCoffee);
         }
 
-        response = await HttpClient.PutAsJsonAsync<Coffee>("api/Coffee", SelectedCoffee); //define that response as actual method to keep hold of the response, putasjsonasync is func whose type is coffee
-                                                                                      //first name in() is name of url to that method, in our case it's just Coffee kina vane update maa there's no custom url
+        //response = await HttpClient.PutAsJsonAsync<Coffee>("api/Coffee", SelectedCoffee); //define that response as actual method to keep hold of the response, putasjsonasync is func whose type is coffee
+        //first name in() is name of url to that method, in our case it's just Coffee kina vane update maa there's no custom url
         if (response.IsSuccessStatusCode) //if response successful: boolean
         {
             //redefine the selected coffee as the response as we're getting back
             SelectedCoffee = await response.Content.ReadFromJsonAsync<Coffee>();
         }
 
-
+        SelectedCoffee = null;
+        StateHasChanged();
 
     }
 
@@ -139,5 +150,6 @@
         SelectedCoffee = new(); //if we do this then whatever the values were there previously after select in right side, will get overwritten by instantiating the new coffee obj
                                 //or if we didn't have anything, we instantiate the new coffee obj
         IsCreating = true;
+        StateHasChanged();
     }
-}
+    }
