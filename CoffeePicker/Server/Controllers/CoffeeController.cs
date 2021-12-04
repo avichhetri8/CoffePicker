@@ -76,7 +76,7 @@ namespace CoffeePicker.Server.Controllers
         [HttpGet]
         public IEnumerable<Coffee> Get()
         {
-            return  applicationDbContext.Coffee.ToList();
+            return  applicationDbContext.Coffee.ToArray();
         }
 
         
